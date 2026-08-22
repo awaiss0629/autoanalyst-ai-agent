@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoAnalyst | Autonomous Research Agent</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="app-container">
+    <header class="header">
+      <div class="badge">Production Agentic Architecture</div>
+      <h1>AutoAnalyst</h1>
+      <p class="subtitle">Autonomous deep research engine powered by LangGraph, Gemini 2.5 Flash, and Tavily Search with active self-correction.</p>
+    </header>
+
+    <main class="main-content">
+      <div class="input-card">
+        <label for="questionInput">Research Topic or Query</label>
+        <div class="input-group">
+          <input type="text" id="questionInput" placeholder="e.g., Compare the environmental policies of the top 5 EV makers..." />
+          <button id="runBtn" onclick="runResearch()">
+            <span id="btnText">Start Research</span>
+            <div id="btnSpinner" class="spinner hidden"></div>
+          </button>
+        </div>
+      </div>
+
+      <div id="statusContainer" class="status-container hidden">
+        <div class="status-header">
+          <span class="pulse-dot"></span>
+          <span id="statusText">Executing state graph...</span>
+        </div>
+        <div class="state-nodes">
+          <span class="node active">Planner</span>
+          <span class="node-arrow">→</span>
+          <span class="node active">Search</span>
+          <span class="node-arrow">→</span>
+          <span class="node active">Extractor</span>
+          <span class="node-arrow">→</span>
+          <span class="node active">Writer</span>
+          <span class="node-arrow">→</span>
+          <span class="node active">Critic (Self-Correction)</span>
+        </div>
+      </div>
+
+      <div id="resultsContainer" class="results-container hidden">
+        <div class="metrics-row">
+          <div class="metric-card">
+            <span class="metric-title">Self-Correction Loops</span>
+            <span id="loopCount" class="metric-val">0</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-title">Fact Grounding Status</span>
+            <span id="groundingStatus" class="metric-val text-success">Verified</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-title">Planned Queries</span>
+            <span id="planCount" class="metric-val">0</span>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="card-header">
+            <h2>Synthesized Research Report</h2>
+            <button class="copy-btn" onclick="copyReport()">Copy Markdown</button>
+          </div>
+          <div id="reportOutput" class="report-body"></div>
+        </div>
+
+        <div class="critique-card">
+          <h3>Critic Node Audit Log</h3>
+          <p id="critiqueOutput"></p>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
