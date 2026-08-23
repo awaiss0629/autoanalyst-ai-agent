@@ -12,7 +12,7 @@ from backend.schemas import Plan, ExtractedFacts, Critique
 load_dotenv()
 
 # Initialize AI and Search Clients
-llm = ChatGoogleGenerativeAI(model="gemini-3.6-flash", temperature=0)
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
 tavily = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
 
 # 1. Define the "State" (The memory the agent carries between steps)
