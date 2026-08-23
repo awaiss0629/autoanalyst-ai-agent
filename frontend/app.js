@@ -68,34 +68,43 @@ function downloadPDF() {
         alert("Please generate a report first before downloading.");
         return;
     }
+
+    // Extract raw text or HTML content
+    const rawContent = reportElement.getAttribute('data-raw-markdown') || reportElement.innerText;
     
-    // Create an isolated container styled strictly for high-contrast document printing
+    // Parse Markdown into structured HTML elements
+    const parsedHTML = typeof marked !== 'undefined' ? marked.parse(rawContent) : reportElement.innerHTML;
+
+    // Build print container with clean document typography and pagination rules
     const printContainer = document.createElement('div');
     printContainer.style.backgroundColor = '#ffffff';
     printContainer.style.color = '#111827';
-    printContainer.style.padding = '24px';
-    printContainer.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif";
-    printContainer.style.fontSize = '14px';
-    printContainer.style.lineHeight = '1.7';
+    printContainer.style.padding = '20px 24px';
+    printContainer.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+    printContainer.style.fontSize = '13px';
+    printContainer.style.lineHeight = '1.6';
 
-    // Inject dedicated print CSS to override dark mode styles and highlight headers/links
     printContainer.innerHTML = `
         <style>
-            * { color: #111827 !important; background-color: transparent !important; }
-            h1, h2, h3, h4 { color: #000000 !important; font-weight: 700 !important; margin-top: 16px; margin-bottom: 8px; }
-            h1 { font-size: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; }
-            h2 { font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
-            h3 { font-size: 14px; }
-            p { margin-bottom: 12px; color: #1f2937 !important; }
-            strong, b { color: #000000 !important; font-weight: 700 !important; }
-            ul, ol { padding-left: 20px; margin-bottom: 12px; }
-            li { margin-bottom: 6px; color: #1f2937 !important; }
-            a { color: #1d4ed8 !important; text-decoration: underline !important; }
-            code, pre { background-color: #f3f4f6 !important; color: #111827 !important; padding: 2px 5px; border-radius: 4px; font-family: monospace; }
+            * { color: #111827 !important; box-sizing: border-box; }
+            h1, h2, h3, h4 { color: #0f172a !important; font-weight: 700 !important; page-break-after: avoid; }
+            h1 { font-size: 18px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-top: 0; margin-bottom: 12px; }
+            h2 { font-size: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-top: 16px; margin-bottom: 8px; }
+            h3 { font-size: 13px; margin-top: 12px; margin-bottom: 6px; }
+            p { margin: 0 0 10px 0; color: #334155 !important; page-break-inside: avoid; }
+            strong, b { color: #0f172a !important; font-weight: 600 !important; }
+            ul, ol { padding-left: 20px; margin: 0 0 10px 0; }
+            li { margin-bottom: 4px; color: #334155 !important; page-break-inside: avoid; }
+            a { color: #2563eb !important; text-decoration: underline !important; word-break: break-all; }
+            hr { border: 0; border-top: 1px solid #e2e8f0; margin: 14px 0; }
+            table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; page-break-inside: avoid; }
+            th, td { border: 1px solid #cbd5e1; padding: 6px 10px; text-align: left; }
+            th { background-color: #f1f5f9; font-weight: 600; }
+            code { background-color: #f1f5f9; padding: 2px 4px; border-radius: 3px; font-family: monospace; font-size: 11px; }
         </style>
-        ${reportElement.innerHTML}
+        ${parsedHTML}
     `;
-    
+
     const options = {
         margin:       [12, 12, 12, 12],
         filename:     'AI_Research_Report.pdf',
@@ -103,13 +112,19 @@ function downloadPDF() {
         html2canvas:  { 
             scale: 2, 
             backgroundColor: '#ffffff',
-            useCORS: true 
+            useCORS: true,
+            scrollY: 0
         },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
-    
+
     html2pdf().set(options).from(printContainer).save();
 }
+
+// Example in your research completion callback:
+const reportData = data.final_report || data.draft || "";
+document.getElementById('reportOutput').innerHTML = marked.parse(reportData);
 
 function copyReport() {
   const reportText = document.getElementById("reportOutput").textContent;
