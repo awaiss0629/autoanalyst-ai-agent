@@ -60,6 +60,14 @@ async function runResearch() {
   }
 }
 
+// In frontend/app.js inside your fetch('/api/research') completion block:
+const reportMarkdown = data.final_report || data.draft || "";
+
+// Store raw text for copying, and render parsed HTML for display
+const outputContainer = document.getElementById('reportOutput');
+outputContainer.setAttribute('data-raw', reportMarkdown);
+outputContainer.innerHTML = marked.parse(reportMarkdown);
+
 
 function downloadPDF() {
     const reportElement = document.getElementById('reportOutput');
@@ -69,44 +77,40 @@ function downloadPDF() {
         return;
     }
 
-    // Extract raw text or HTML content
-    const rawContent = reportElement.getAttribute('data-raw-markdown') || reportElement.innerText;
-    
-    // Parse Markdown into structured HTML elements
-    const parsedHTML = typeof marked !== 'undefined' ? marked.parse(rawContent) : reportElement.innerHTML;
+    // Get the formatted HTML content
+    const rawMarkdown = reportElement.getAttribute('data-raw') || reportElement.innerText;
+    const formattedContent = typeof marked !== 'undefined' ? marked.parse(rawMarkdown) : reportElement.innerHTML;
 
-    // Build print container with clean document typography and pagination rules
-    const printContainer = document.createElement('div');
-    printContainer.style.backgroundColor = '#ffffff';
-    printContainer.style.color = '#111827';
-    printContainer.style.padding = '20px 24px';
-    printContainer.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-    printContainer.style.fontSize = '13px';
-    printContainer.style.lineHeight = '1.6';
+    // Create a standalone print document container
+    const printWrapper = document.createElement('div');
+    printWrapper.style.backgroundColor = '#ffffff';
+    printWrapper.style.color = '#1a202c';
+    printWrapper.style.padding = '24px 32px';
+    printWrapper.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+    printWrapper.style.fontSize = '12px';
+    printWrapper.style.lineHeight = '1.75';
 
-    printContainer.innerHTML = `
+    printWrapper.innerHTML = `
         <style>
-            * { color: #111827 !important; box-sizing: border-box; }
-            h1, h2, h3, h4 { color: #0f172a !important; font-weight: 700 !important; page-break-after: avoid; }
-            h1 { font-size: 18px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-top: 0; margin-bottom: 12px; }
-            h2 { font-size: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-top: 16px; margin-bottom: 8px; }
-            h3 { font-size: 13px; margin-top: 12px; margin-bottom: 6px; }
-            p { margin: 0 0 10px 0; color: #334155 !important; page-break-inside: avoid; }
-            strong, b { color: #0f172a !important; font-weight: 600 !important; }
-            ul, ol { padding-left: 20px; margin: 0 0 10px 0; }
-            li { margin-bottom: 4px; color: #334155 !important; page-break-inside: avoid; }
+            * { color: #1a202c !important; box-sizing: border-box; }
+            h1 { font-size: 18px; font-weight: 700; color: #111827 !important; margin: 0 0 16px 0; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; page-break-after: avoid; }
+            h2 { font-size: 14px; font-weight: 700; color: #1f2937 !important; margin: 20px 0 10px 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; page-break-after: avoid; }
+            h3 { font-size: 13px; font-weight: 600; color: #374151 !important; margin: 14px 0 6px 0; page-break-after: avoid; }
+            p { margin: 0 0 12px 0; color: #374151 !important; line-height: 1.75; }
+            strong, b { font-weight: 700; color: #111827 !important; }
+            ul, ol { margin: 0 0 14px 0; padding-left: 22px; }
+            li { margin-bottom: 6px; color: #374151 !important; line-height: 1.6; }
+            hr { border: 0; border-top: 1px solid #e5e7eb; margin: 18px 0; }
             a { color: #2563eb !important; text-decoration: underline !important; word-break: break-all; }
-            hr { border: 0; border-top: 1px solid #e2e8f0; margin: 14px 0; }
-            table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; page-break-inside: avoid; }
-            th, td { border: 1px solid #cbd5e1; padding: 6px 10px; text-align: left; }
-            th { background-color: #f1f5f9; font-weight: 600; }
-            code { background-color: #f1f5f9; padding: 2px 4px; border-radius: 3px; font-family: monospace; font-size: 11px; }
+            table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 11px; }
+            th, td { border: 1px solid #d1d5db; padding: 6px 10px; text-align: left; }
+            th { background-color: #f3f4f6; font-weight: 600; }
         </style>
-        ${parsedHTML}
+        ${formattedContent}
     `;
 
     const options = {
-        margin:       [12, 12, 12, 12],
+        margin:       [14, 14, 14, 14],
         filename:     'AI_Research_Report.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { 
@@ -119,7 +123,7 @@ function downloadPDF() {
         pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
-    html2pdf().set(options).from(printContainer).save();
+    html2pdf().set(options).from(printWrapper).save();
 }
 
 // Example in your research completion callback:
