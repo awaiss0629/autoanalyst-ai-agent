@@ -60,6 +60,30 @@ async function runResearch() {
   }
 }
 
+
+function downloadPDF() {
+    // Grab the exact div where the AI writes the final report
+    const element = document.getElementById('reportOutput'); 
+    
+    // Check if it's empty to prevent users from downloading a blank page
+    if (!element.innerText.trim()) {
+        alert("Please generate a report first before downloading.");
+        return;
+    }
+    
+    // Configure the PDF layout
+    const options = {
+        margin:       15,
+        filename:     'AI_Research_Report.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 }, // Ensures crisp text
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    // Generate and download the PDF
+    html2pdf().set(options).from(element).save();
+}
+
 function copyReport() {
   const reportText = document.getElementById("reportOutput").textContent;
   navigator.clipboard.writeText(reportText).then(() => {

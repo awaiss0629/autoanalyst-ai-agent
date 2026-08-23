@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <title>AutoAnalyst | Autonomous Research Agent</title>
   <link rel="stylesheet" href="/static/style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -65,6 +66,7 @@
           <div class="card-header">
             <h2>Synthesized Research Report</h2>
             <button class="copy-btn" onclick="copyReport()">Copy Markdown</button>
+            <button class="copy-btn" onclick="downloadPDF()">Download PDF</button>
           </div>
           <div id="reportOutput" class="report-body"></div>
         </div>
