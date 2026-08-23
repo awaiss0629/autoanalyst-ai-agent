@@ -62,25 +62,34 @@ async function runResearch() {
 
 
 function downloadPDF() {
-    // Grab the exact div where the AI writes the final report
     const element = document.getElementById('reportOutput'); 
     
-    // Check if it's empty to prevent users from downloading a blank page
     if (!element.innerText.trim()) {
         alert("Please generate a report first before downloading.");
         return;
     }
     
-    // Configure the PDF layout
     const options = {
         margin:       15,
         filename:     'AI_Research_Report.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 }, // Ensures crisp text
+        html2canvas:  { 
+            scale: 2,
+            // Intercept the cloned HTML right before it becomes a PDF
+            onclone: function(clonedDoc) {
+                const clonedElement = clonedDoc.getElementById('reportOutput');
+                clonedElement.style.color = 'black'; 
+                
+                // Force all nested headers, paragraphs, and lists to black ink
+                const children = clonedElement.querySelectorAll('*');
+                children.forEach(child => {
+                    child.style.color = 'black';
+                });
+            }
+        }, 
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     
-    // Generate and download the PDF
     html2pdf().set(options).from(element).save();
 }
 
