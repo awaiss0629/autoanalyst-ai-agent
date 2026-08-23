@@ -30,12 +30,16 @@ class AgentState(TypedDict):
 # --- 2. Define the Nodes (The Steps) ---
 
 def planner(state: AgentState):
+    # 1. Define the prompt using the user's research query
+    prompt = f"You are an expert research planner. Break down this research topic into 3 specific, highly targeted search queries: {state['query']}"
+    
+    # 2. Invoke the model to get structured output
     res = llm.with_structured_output(Plan).invoke(prompt)
-
- # Safety net: If the LLM fails to structure the output, provide a default fallback plan
-    if res is None:
-        return {"plan": ["Conduct a comprehensive search on the requested topic."], "loop_count": state.get("loop_count", 0)}
-
+    
+    # 3. Safety net: If the Lite model fails to format the JSON, just use the original query
+    if res is None or not getattr(res, "sub_questions", None):
+        return {"plan": [state["query"]], "loop_count": state.get("loop_count", 0)}
+        
     return {"plan": res.sub_questions, "loop_count": state.get("loop_count", 0)}
 
 def search(state: AgentState):
