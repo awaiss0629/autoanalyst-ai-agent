@@ -34,7 +34,6 @@ async function runResearch() {
     const data = await response.json();
 
     // ---- SINGLE SOURCE OF TRUTH for the report content ----
-    // Check all field names your backend has used across versions.
     // TODO: once you confirm the real field name in your FastAPI response
     // model, simplify this to just that one field.
     const reportMarkdown = data.report || data.final_report || data.draft || "";
@@ -42,10 +41,18 @@ async function runResearch() {
     const outputContainer = document.getElementById("reportOutput");
     // Store the RAW markdown for both copying and PDF export
     outputContainer.setAttribute("data-raw", reportMarkdown);
-    // Render the PARSED markdown as HTML for on-screen display
-    outputContainer.innerHTML = reportMarkdown
-      ? marked.parse(reportMarkdown)
-      : "<p>No report generated.</p>";
+
+    // Defensive check: if the marked.js CDN failed to load for any reason
+    // (network block, ad-blocker, CDN outage), fall back to plain text
+    // instead of throwing an uncaught error and breaking the whole flow.
+    if (typeof marked === "undefined") {
+      console.warn("marked.js failed to load from CDN — displaying raw markdown as plain text instead of rendered HTML.");
+      outputContainer.textContent = reportMarkdown || "No report generated.";
+    } else {
+      outputContainer.innerHTML = reportMarkdown
+        ? marked.parse(reportMarkdown)
+        : "<p>No report generated.</p>";
+    }
 
     // Populate the rest of the metrics
     document.getElementById("loopCount").textContent = data.self_correction_loops_triggered ?? 0;
@@ -78,6 +85,11 @@ function downloadPDF() {
 
     if (!reportElement || !reportElement.innerText.trim()) {
         alert("Please generate a report first before downloading.");
+        return;
+    }
+
+    if (typeof html2pdf === "undefined") {
+        alert("PDF export library failed to load. Please refresh the page and try again.");
         return;
     }
 
