@@ -41,6 +41,8 @@ async function runResearch() {
     const outputContainer = document.getElementById("reportOutput");
     // Store the RAW markdown for both copying and PDF export
     outputContainer.setAttribute("data-raw", reportMarkdown);
+    // Store the exact query that produced this report, for use in the PDF filename
+    outputContainer.setAttribute("data-query", question);
 
     // Defensive check: if the marked.js CDN failed to load for any reason
     // (network block, ad-blocker, CDN outage), fall back to plain text
@@ -80,6 +82,21 @@ async function runResearch() {
   }
 }
 
+function slugifyForFilename(text, maxLength = 60) {
+    if (!text) return "";
+    return text
+        .trim()
+        .toLowerCase()
+        // Replace anything that isn't a letter, number, or space with nothing
+        .replace(/[^a-z0-9\s-]/g, "")
+        // Collapse whitespace into single hyphens
+        .replace(/\s+/g, "-")
+        // Trim to a reasonable length so filenames don't get absurdly long
+        .slice(0, maxLength)
+        // Remove a trailing hyphen if the truncation cut mid-word
+        .replace(/-+$/, "");
+}
+
 function downloadPDF() {
     const reportElement = document.getElementById('reportOutput');
 
@@ -96,6 +113,15 @@ function downloadPDF() {
     // Get the raw markdown (set as a single source of truth in runResearch)
     const rawMarkdown = reportElement.getAttribute('data-raw') || reportElement.innerText;
     const formattedContent = typeof marked !== 'undefined' ? marked.parse(rawMarkdown) : reportElement.innerHTML;
+
+    // Build a filename from the actual research query, falling back to a
+    // generic name only if the query is somehow missing.
+    const originalQuery = reportElement.getAttribute('data-query') || "";
+    const slug = slugifyForFilename(originalQuery);
+    const dateStamp = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const filename = slug
+        ? `AutoAnalyst_${slug}_${dateStamp}.pdf`
+        : `AI_Research_Report_${dateStamp}.pdf`;
 
     // Create a standalone print document container
     const printWrapper = document.createElement('div');
@@ -127,7 +153,7 @@ function downloadPDF() {
 
     const options = {
         margin:       [14, 14, 14, 14],
-        filename:     'AI_Research_Report.pdf',
+        filename:     filename,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  {
             scale: 2,
