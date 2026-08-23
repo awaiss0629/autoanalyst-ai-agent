@@ -62,35 +62,53 @@ async function runResearch() {
 
 
 function downloadPDF() {
-    const element = document.getElementById('reportOutput'); 
+    const reportElement = document.getElementById('reportOutput');
     
-    if (!element.innerText.trim()) {
+    if (!reportElement || !reportElement.innerText.trim()) {
         alert("Please generate a report first before downloading.");
         return;
     }
     
+    // Create an isolated container styled strictly for high-contrast document printing
+    const printContainer = document.createElement('div');
+    printContainer.style.backgroundColor = '#ffffff';
+    printContainer.style.color = '#111827';
+    printContainer.style.padding = '24px';
+    printContainer.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif";
+    printContainer.style.fontSize = '14px';
+    printContainer.style.lineHeight = '1.7';
+
+    // Inject dedicated print CSS to override dark mode styles and highlight headers/links
+    printContainer.innerHTML = `
+        <style>
+            * { color: #111827 !important; background-color: transparent !important; }
+            h1, h2, h3, h4 { color: #000000 !important; font-weight: 700 !important; margin-top: 16px; margin-bottom: 8px; }
+            h1 { font-size: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; }
+            h2 { font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
+            h3 { font-size: 14px; }
+            p { margin-bottom: 12px; color: #1f2937 !important; }
+            strong, b { color: #000000 !important; font-weight: 700 !important; }
+            ul, ol { padding-left: 20px; margin-bottom: 12px; }
+            li { margin-bottom: 6px; color: #1f2937 !important; }
+            a { color: #1d4ed8 !important; text-decoration: underline !important; }
+            code, pre { background-color: #f3f4f6 !important; color: #111827 !important; padding: 2px 5px; border-radius: 4px; font-family: monospace; }
+        </style>
+        ${reportElement.innerHTML}
+    `;
+    
     const options = {
-        margin:       15,
+        margin:       [12, 12, 12, 12],
         filename:     'AI_Research_Report.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { 
-            scale: 2,
-            // Intercept the cloned HTML right before it becomes a PDF
-            onclone: function(clonedDoc) {
-                const clonedElement = clonedDoc.getElementById('reportOutput');
-                clonedElement.style.color = 'black'; 
-                
-                // Force all nested headers, paragraphs, and lists to black ink
-                const children = clonedElement.querySelectorAll('*');
-                children.forEach(child => {
-                    child.style.color = 'black';
-                });
-            }
-        }, 
+            scale: 2, 
+            backgroundColor: '#ffffff',
+            useCORS: true 
+        },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     
-    html2pdf().set(options).from(element).save();
+    html2pdf().set(options).from(printContainer).save();
 }
 
 function copyReport() {
