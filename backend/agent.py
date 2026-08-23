@@ -53,13 +53,20 @@ def search(state: AgentState):
     return {"search_results": "\n---\n".join(all_results)}
 
 def extractor(state: AgentState):
-    prompt = (
-        f"Extract factual claims and their source URLs from the following search results to answer: {state['question']}\n\n"
-        f"Search Results: {state['search_results']}\n"
-        f"Previous Critique to address (if any): {state.get('critique', 'None')}"
-    )
-    res = llm.with_structured_output(ExtractedFacts).invoke(prompt)
-    return {"extracted_facts": [f.model_dump() for f in res.facts]}
+    search_results = state.get("search_results", "")
+    
+    # Define your prompt (keep whatever prompt you currently have here)
+    prompt = f"Extract key facts from this text: {search_results}"
+    
+    # Invoke the model
+    res = llm.with_structured_output(Facts).invoke(prompt)
+    
+    # SAFETY NET: If the Lite model fails to format the JSON facts, 
+    # just pass the raw search results as one giant fact so the Writer has data!
+    if res is None or not getattr(res, "facts", None):
+        return {"facts": [search_results], "loop_count": state.get("loop_count", 0)}
+        
+    return {"facts": res.facts, "loop_count": state.get("loop_count", 0)}
 
 def writer(state: AgentState):
     facts_str = "\n".join([f"- {f['claim']} (Source: {f['source_url']})" for f in state['extracted_facts']])
