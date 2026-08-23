@@ -30,8 +30,12 @@ class AgentState(TypedDict):
 # --- 2. Define the Nodes (The Steps) ---
 
 def planner(state: AgentState):
-    prompt = f"Break this research question into 3-5 specific search queries: {state['question']}"
     res = llm.with_structured_output(Plan).invoke(prompt)
+
+ # Safety net: If the LLM fails to structure the output, provide a default fallback plan
+    if res is None:
+        return {"plan": ["Conduct a comprehensive search on the requested topic."], "loop_count": state.get("loop_count", 0)}
+
     return {"plan": res.sub_questions, "loop_count": state.get("loop_count", 0)}
 
 def search(state: AgentState):
