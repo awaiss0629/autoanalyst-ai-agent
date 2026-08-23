@@ -274,3 +274,22 @@ button#runBtn:disabled {
 .hidden {
   display: none !important;
 }
+
+/* Universal mobile responsiveness */
+* {
+    box-sizing: border-box;
+}
+
+/* Force long words and URLs to wrap inside the screen */
+body, .container, p, span, div {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    max-width: 100%;
+}
+
+/* Make code and markdown blocks scroll horizontally instead of stretching the screen */
+pre {
+    white-space: pre-wrap;
+    overflow-x: auto;
+    max-width: 100%;
+}
