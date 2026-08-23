@@ -33,9 +33,22 @@ async function runResearch() {
 
     const data = await response.json();
 
-    // Populate Results
-    document.getElementById("reportOutput").textContent = data.report || "No report generated.";
-    document.getElementById("loopCount").textContent = data.self_correction_loops_triggered;
+    // ---- SINGLE SOURCE OF TRUTH for the report content ----
+    // Check all field names your backend has used across versions.
+    // TODO: once you confirm the real field name in your FastAPI response
+    // model, simplify this to just that one field.
+    const reportMarkdown = data.report || data.final_report || data.draft || "";
+
+    const outputContainer = document.getElementById("reportOutput");
+    // Store the RAW markdown for both copying and PDF export
+    outputContainer.setAttribute("data-raw", reportMarkdown);
+    // Render the PARSED markdown as HTML for on-screen display
+    outputContainer.innerHTML = reportMarkdown
+      ? marked.parse(reportMarkdown)
+      : "<p>No report generated.</p>";
+
+    // Populate the rest of the metrics
+    document.getElementById("loopCount").textContent = data.self_correction_loops_triggered ?? 0;
     document.getElementById("planCount").textContent = (data.plan && data.plan.length) || 0;
     document.getElementById("critiqueOutput").textContent = data.final_critique || "Draft verified without critical issues.";
 
@@ -60,24 +73,15 @@ async function runResearch() {
   }
 }
 
-// In frontend/app.js inside your fetch('/api/research') completion block:
-const reportMarkdown = data.final_report || data.draft || "";
-
-// Store raw text for copying, and render parsed HTML for display
-const outputContainer = document.getElementById('reportOutput');
-outputContainer.setAttribute('data-raw', reportMarkdown);
-outputContainer.innerHTML = marked.parse(reportMarkdown);
-
-
 function downloadPDF() {
     const reportElement = document.getElementById('reportOutput');
-    
+
     if (!reportElement || !reportElement.innerText.trim()) {
         alert("Please generate a report first before downloading.");
         return;
     }
 
-    // Get the formatted HTML content
+    // Get the raw markdown (set as a single source of truth in runResearch)
     const rawMarkdown = reportElement.getAttribute('data-raw') || reportElement.innerText;
     const formattedContent = typeof marked !== 'undefined' ? marked.parse(rawMarkdown) : reportElement.innerHTML;
 
@@ -113,8 +117,8 @@ function downloadPDF() {
         margin:       [14, 14, 14, 14],
         filename:     'AI_Research_Report.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { 
-            scale: 2, 
+        html2canvas:  {
+            scale: 2,
             backgroundColor: '#ffffff',
             useCORS: true,
             scrollY: 0
@@ -126,12 +130,11 @@ function downloadPDF() {
     html2pdf().set(options).from(printWrapper).save();
 }
 
-// Example in your research completion callback:
-const reportData = data.final_report || data.draft || "";
-document.getElementById('reportOutput').innerHTML = marked.parse(reportData);
-
 function copyReport() {
-  const reportText = document.getElementById("reportOutput").textContent;
+  const reportElement = document.getElementById("reportOutput");
+  // Copy the raw markdown, not the rendered HTML's plain text,
+  // so pasting elsewhere preserves formatting if the target supports markdown.
+  const reportText = reportElement.getAttribute("data-raw") || reportElement.textContent;
   navigator.clipboard.writeText(reportText).then(() => {
     alert("Report copied to clipboard!");
   });
